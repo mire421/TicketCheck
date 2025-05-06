@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eTicket Prüfer</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.9/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    #result {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>eTicket Prüfer</h1>
+  <div id="reader"></div>
+  <div id="result"><strong>Scan ein Ticket…</strong></div>
+
+  <script>
+    function isTicketValid(data) {
+      try {
+        const ticket = JSON.parse(data);
+        const now = new Date();
+        const validFrom = new Date(ticket.validFrom);
+        const validTo = new Date(ticket.validTo);
+
+        return now >= validFrom && now <= validTo;
+      } catch (e) {
+        return null; // Kein gültiges JSON
+      }
+    }
+
+    const resultDiv = document.getElementById("result");
+
+    function onScanSuccess(decodedText) {
+      const validity = isTicketValid(decodedText);
+      if (validity === true) {
+        resultDiv.innerHTML = `<strong>✔ Ticket gültig!</strong><br><pre>${decodedText}</pre>`;
+      } else if (validity === false) {
+        resultDiv.innerHTML = `<strong>✖ Ticket abgelaufen oder noch nicht gültig.</strong><br><pre>${decodedText}</pre>`;
+      } else {
+        resultDiv.innerHTML = `<strong>Unbekanntes Format:</strong><br><pre>${decodedText}</pre>`;
+      }
+    }
+
+    new Html5Qrcode("reader").start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
+      onScanSuccess
+    );
+  </script>
+</body>
+</html>
